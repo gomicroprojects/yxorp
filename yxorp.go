@@ -15,13 +15,17 @@ package main
 //     import a
 //     import b
 import (
+	// The os package (http://golang.org/pkg/os/) for os.Exit()
+	"os"
+	// The fmt package (http://golang.org/pkg/fmt/) for formatted I/O
+	"fmt"
 	// The flag package (http://golang.org/pkg/flag/)
 	// We will us this to parse command line flags
 	"flag"
 )
 
 // We declare a variable "configFileName", which is a string
-// Since it is just declared, it is inialized to its "zero value".
+// Since it is just declared, it is inialized to its zero value.
 // The zero value for a string is an empty string ""
 var configFileName string
 
@@ -39,4 +43,18 @@ func main() {
 	//
 	// As an added bonus we have a basic help message with the -h flag built-in. Try it out.
 	flag.Parse()
+
+	// load the config file
+	// see the config.go file for the implementation of loadConfig()
+	err := loadConfig()
+	if err != nil {
+		// print out the error
+		fmt.Println(err)
+		// os.Args[0] is the command name
+		fmt.Printf("\nUsage of %s\n", os.Args[0])
+		// this will print out the help for the flags
+		flag.PrintDefaults()
+		// exit the program with an error code
+		os.Exit(1)
+	}
 }
