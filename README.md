@@ -15,9 +15,10 @@ yxorp to the rescue.
 
 It:
 
-* is configurable with a simple JSON file
-* will act as a normal HTTP reverse proxy
-* bonus: will optionally GZip encode the response
+* provides a host-based reverse-proxy.
+* is configurable with a simple JSON file.
+* will act as a normal HTTP reverse proxy.
+* bonus: will optionally GZip encode the response.
 
 The core functionality will be accomplished by using the [httputil](http://golang.org/pkg/net/http/httputil/) package. It provides a [ReverseProxy](http://golang.org/pkg/net/http/httputil/#ReverseProxy). No need to reinvent the wheel.
 

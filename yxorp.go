@@ -46,7 +46,7 @@ func main() {
 
 	// load the config file
 	// see the config.go file for the implementation of loadConfig()
-	err := loadConfig()
+	_, err := loadConfig()
 	if err != nil {
 		// print out the error
 		fmt.Println(err)
