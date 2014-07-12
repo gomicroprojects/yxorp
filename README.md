@@ -19,6 +19,8 @@ It:
 * will act as a normal HTTP reverse proxy
 * bonus: will optionally GZip encode the response
 
+The core functionality will be accomplished by using the [httputil](http://golang.org/pkg/net/http/httputil/) package. It provides a [ReverseProxy](http://golang.org/pkg/net/http/httputil/#ReverseProxy). No need to reinvent the wheel.
+
 ## Starting
 
 Start with [yxorp.go](yxorp.go)
