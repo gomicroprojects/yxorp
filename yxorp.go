@@ -135,16 +135,13 @@ func proxy() http.Handler {
 	// the HandlerFunc implements the http.Handler, and the ServeHTTP() implementation will call the underlying func type
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// we will check if there is an entry for he request Host
-		// here we precede the expression "!ok" with a simple statement (http://golang.org/ref/spec#If_statements)
-		// h will be an http.Handler, ok a bool which indicates whether the entry exists
-		// the scope of the h and ok var is limited to the if/else blocks
-		if h, ok := proxyMap[r.Host]; !ok {
+		h, ok := proxyMap[r.Host]
+		if !ok {
 			// no entry, HTTP status not found (is this the correct status?)
 			w.WriteHeader(http.StatusNotFound)
 			return
-		} else {
-			// proceed with the matched handler
-			h.ServeHTTP(w, r)
 		}
+		// proceed with the matched handler
+		h.ServeHTTP(w, r)
 	})
 }
