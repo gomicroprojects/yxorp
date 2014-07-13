@@ -15,6 +15,10 @@ package main
 //     import a
 //     import b
 import (
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"time"
 	// The os package (http://golang.org/pkg/os/) for os.Exit()
 	"os"
 	// The fmt package (http://golang.org/pkg/fmt/) for formatted I/O
@@ -29,6 +33,16 @@ import (
 // The zero value for a string is an empty string ""
 var configFileName string
 
+// The server address to listen to
+// This will be set by a flag as well
+var serverAddress string
+
+// We declare the map "proxyMap"
+// It will map a host to an http.Handler
+// In the default case (no GZip) it will be a *httputil.ReverseProxy, which implements the http.Handler
+// see (*httputil.ReverseProxy).ServeHTTP(http.ResponseWriter, *http.Request)
+var proxyMap map[string]http.Handler
+
 func main() {
 	// Setting up the flags using the flag package
 	//
@@ -39,6 +53,8 @@ func main() {
 	//
 	// Our flag name will be "c", the default value an empty string, and a short description.
 	flag.StringVar(&configFileName, "c", "", "The config file name to use. Example: /tmp/yxorp.json")
+	// and the server address
+	flag.StringVar(&serverAddress, "a", ":8080", "The server address to listen to.")
 	// flag.Parse() will parse the flags and do its magic
 	//
 	// As an added bonus we have a basic help message with the -h flag built-in. Try it out.
@@ -46,7 +62,7 @@ func main() {
 
 	// load the config file
 	// see the config.go file for the implementation of loadConfig()
-	_, err := loadConfig()
+	cfg, err := loadConfig()
 	if err != nil {
 		// print out the error
 		fmt.Println(err)
@@ -57,4 +73,62 @@ func main() {
 		// exit the program with an error code
 		os.Exit(1)
 	}
+	// initalize the proxy map
+	proxyMap = make(map[string]http.Handler)
+	// we range over the cfg entries (see http://golang.org/ref/spec#RangeClause)
+	// the key will be the host name (since it is a host-based reverse proxy)
+	for host, proxyCfg := range cfg {
+		// parse the url
+		targetURL, err := url.Parse(proxyCfg.TargetURL)
+		if err != nil {
+			// exit on any error
+			fmt.Printf("error on config host %s parsing target URL: %s", host, err)
+			os.Exit(1)
+		}
+		// NewSingleHostReverseProxy will return a *httputil.Reversproxy, which in turn is a http.Handler
+		// that's why we can assign it to the map
+		proxyMap[host] = httputil.NewSingleHostReverseProxy(targetURL)
+	}
+
+	// Create an HTTP server
+	// You can read this as: server is a pointer to(take the address of) an
+	// http.Server with fields...
+	//
+	// This is equivalent to:
+	// server := new(http.Server)
+	// server.Addr = serverAddress
+	// server.Handler = proxy()
+	// etc.
+	server := &http.Server{
+		Addr: serverAddress,
+		// the implementation is further below in this file, the function proxy() will return an http.Handler
+		Handler:      proxy(),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	// Start serving
+	err = server.ListenAndServe()
+	if err != nil {
+		// if there was an error, it is usually a fatal error and we can't continue serving
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+// will return a basic proxy handling http.Handler
+func proxy() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// we will check if there is an entry for he request Host
+		// here we precede the expression "!ok" with a simple statement (http://golang.org/ref/spec#If_statements)
+		// h will be an http.Handler, ok a bool which indicates whether the entry exists
+		// the scope of the h and ok var is limited to the if/else blocks
+		if h, ok := proxyMap[r.Host]; !ok {
+			// no entry, HTTP status not found (is this the correct status?)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		} else {
+			// proceed with the matched handler
+			h.ServeHTTP(w, r)
+		}
+	})
 }

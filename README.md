@@ -7,6 +7,18 @@ A tiny reverse-proxy
 
 Install with `go get github.com/gomicroprojects/yxorp`
 
+Example config JSON file:
+
+    {
+        "www.example.com": {
+            "TargetURL": "http://localhost:8080/example"
+        },
+        "www2.example.com": {
+            "TargetURL": "http://localhost:8081/",
+            "GZ": true
+        }
+    }
+
 ## The idea
 
 Suppose you have now finished a couple of Go projects and you want to deploy them on a server. But you only have one IP address available and want to serve multiple projects under different domains on port 80.
