@@ -18,7 +18,7 @@ import (
 
 // ProxyConfig is a configuration for one proxy instance
 // We need a target URL for httputil.NewSingleHostReverseProxy()
-// GZ will indicate whether to GZip encode this proxy
+// GZ will indicate whether to gzip encode this proxy
 //
 // We will use the json package (http://golang.org/pkg/encoding/json/) to parse the config
 type ProxyConfig struct {

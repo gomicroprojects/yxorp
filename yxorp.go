@@ -15,6 +15,8 @@ package main
 //     import a
 //     import b
 import (
+	// See gz/gz.go for the implementation of our first own library
+	"github.com/gomicroprojects/yxorp/gz"
 	// The http package (http://golang.org/pkg/net/http/) for our HTTP front servers
 	"net/http"
 	// The httputil package (http://golang.org/pkg/net/http/httputil/) for the reverse proxy implementation
@@ -43,7 +45,7 @@ var serverAddress string
 
 // We declare the map "proxyMap"
 // It will map a host to an http.Handler
-// In the default case (no GZip) it will be a *httputil.ReverseProxy, which implements the http.Handler
+// In the default case (no gzip) it will be a *httputil.ReverseProxy, which implements the http.Handler
 // see (*httputil.ReverseProxy).ServeHTTP(http.ResponseWriter, *http.Request)
 var proxyMap map[string]http.Handler
 
@@ -92,6 +94,11 @@ func main() {
 		// NewSingleHostReverseProxy will return a *httputil.Reversproxy, which in turn is a http.Handler
 		// that's why we can assign it to the map
 		proxyMap[host] = httputil.NewSingleHostReverseProxy(targetURL)
+		// config requested to gzip encode this proxy
+		if proxyCfg.GZ {
+			// so, we will wrap our default proxy handler with our gzip handler
+			proxyMap[host] = gz.GzHandler(proxyMap[host])
+		}
 	}
 
 	// Create an HTTP server
