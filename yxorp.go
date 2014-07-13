@@ -15,9 +15,13 @@ package main
 //     import a
 //     import b
 import (
+	// The http package (http://golang.org/pkg/net/http/) for our HTTP front servers
 	"net/http"
+	// The httputil package (http://golang.org/pkg/net/http/httputil/) for the reverse proxy implementation
 	"net/http/httputil"
+	// The url package (http://golang.org/pkg/net/url/) to parse the URL string in the config
 	"net/url"
+	// The time package for the timeout constants for our HTTP server
 	"time"
 	// The os package (http://golang.org/pkg/os/) for os.Exit()
 	"os"
@@ -117,6 +121,11 @@ func main() {
 
 // will return a basic proxy handling http.Handler
 func proxy() http.Handler {
+	// http.HandlerFunc will turn our anonymous func(w http.ResponseWriter, r *http.Request) into an http.Handler
+	// check out the code for http.HandlerFunc here: http://golang.org/pkg/net/http/#HandlerFunc
+	// this is an example of a very elegant and surprising use of the language features
+	// http.HandlerFunc is a type with an underlying type func(http.ResponseWriter, *http.Request)
+	// the HandlerFunc implements the http.Handler, and the ServeHTTP() implementation will call the underlying func type
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// we will check if there is an entry for he request Host
 		// here we precede the expression "!ok" with a simple statement (http://golang.org/ref/spec#If_statements)
